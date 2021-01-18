@@ -1,4 +1,8 @@
-﻿
+﻿@model IEnumerable<ReportAssign.Models.PatientList>
+
+
+
+
 @{
     ViewBag.Title = "Index";
     Layout = "";
@@ -7,10 +11,47 @@
 <h1>報告分派系統</h1>
 
 
-@using (Html.BeginForm())
+@using (Html.BeginForm("QueryReport", "Assign",FormMethod.Post))
 {
-    <p>檢查流水號 : <input type="text" name="name" value="" />
-    <input type="submit" name="name" value="查詢" />
+    <p>
+        檢查流水號 :<input type="text" name="accession_num" value="" />
+        <input type="submit" name="name" value="查詢" />
     </p>
 }
 
+<table>
+    <tr>
+        <td>病歷號</td>
+        <td>姓名</td>
+        <td>檢查流水號</td>
+        <td>醫師帳號</td>
+        <td>醫師姓名</td>
+    </tr>
+
+    @if (ViewBag.CheckData == "ok")
+    {
+
+        foreach (var item in Model)
+        {
+
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.PatientID)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.PatientName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.AccessionNum)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DoctorID)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DoctorName)
+                </td>
+            </tr>
+         }
+    }
+
+</table>
