@@ -1,17 +1,18 @@
 ﻿@model IEnumerable<ReportAssign.Models.PatientList>
 
-
-
-
 @{
     ViewBag.Title = "Index";
     Layout = "";
 }
 
+@TempData["Result"]
+
 <h1>報告分派系統</h1>
 
+@Html.ActionLink("新增資料", "Create")
 
-@using (Html.BeginForm("QueryReport", "Assign",FormMethod.Post))
+
+@using (Html.BeginForm("QueryReport", "Assign", FormMethod.Post))
 {
     <p>
         檢查流水號 :<input type="text" name="accession_num" value="" />
@@ -20,16 +21,18 @@
 }
 
 <table>
-    <tr>
-        <td>病歷號</td>
-        <td>姓名</td>
-        <td>檢查流水號</td>
-        <td>醫師帳號</td>
-        <td>醫師姓名</td>
-    </tr>
-
     @if (ViewBag.CheckData == "ok")
     {
+        <tr>
+            <td>病歷號</td>
+            <td>姓名</td>
+            <td>檢查流水號</td>
+            <td>醫師帳號</td>
+            <td>醫師姓名</td>
+        </tr>
+
+
+
 
         foreach (var item in Model)
         {
@@ -50,8 +53,18 @@
                 <td>
                     @Html.DisplayFor(modelItem => item.DoctorName)
                 </td>
+                <td>
+                    @Html.ActionLink("編輯", "Edit", new { accession_num = item.AccessionNum })
+                    @Html.ActionLink("刪除", "Delete", new { accession_num = item.AccessionNum })
+                </td>
             </tr>
-         }
+        }
+
+        <tr>
+            @Html.DropDownList("patlist", ViewBag.Test as IEnumerable<SelectListItem>,
+                 "--Select--")
+            @*  https://stackoverflow.com/questions/50497974/can-not-retrieve-dropdownlist-value-in-model-using-mvc-ado-net*@
+        </tr>
     }
 
 </table>

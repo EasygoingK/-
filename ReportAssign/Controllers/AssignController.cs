@@ -63,6 +63,9 @@ namespace ReportAssign.Controllers
 
                 }
 
+
+                ViewBag.Test = new SelectList(patlist, "AccessionNum", "PatientName");
+
                 return View("Index", patlist);
 
             }
@@ -71,6 +74,169 @@ namespace ReportAssign.Controllers
                 return View("Index");
             }
 
+        }
+
+        public ActionResult Create()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public ActionResult Create(PatientList data)
+        {
+            if (ModelState.IsValid)
+            {
+                using (SqlConnection conn = new SqlConnection(WebConfigurationManager.ConnectionStrings["ReportDB"].ConnectionString))
+                {
+                    conn.Open();
+
+                    string sql = "Insert into patientlist (PatientID, PatientName, AccessionNum) Values (@PatientID, @PatientName, @AccessionNum)";
+
+                    SqlCommand cmd = new SqlCommand(sql, conn);
+
+                    cmd.Parameters.AddWithValue("@PatientID", data.PatientID);
+                    cmd.Parameters.AddWithValue("@PatientName", data.PatientName);
+                    cmd.Parameters.AddWithValue("@AccessionNum", data.AccessionNum);
+
+                    var result = cmd.ExecuteNonQuery();
+
+                    if (result >= 1)
+                    {
+                        TempData["Result"] = "資料新增成功!";
+                    }
+
+                }
+
+                return RedirectToAction("Index");
+            }
+
+            return View(data);
+        }
+
+        public ActionResult Edit(string accession_num)
+        {
+            var data = new PatientList();
+
+            using (SqlConnection conn = new SqlConnection(WebConfigurationManager.ConnectionStrings["ReportDB"].ConnectionString))
+            {
+                conn.Open();
+
+                string sql = "SELECT PatientID, PatientName, AccessionNum, DoctorID, DoctorName " +
+                    "FROM patientlist Where AccessionNum = @AccessionNum";
+
+                SqlCommand cmd = new SqlCommand(sql, conn);
+
+                cmd.Parameters.AddWithValue("@AccessionNum", accession_num);
+
+                SqlDataReader Reader = cmd.ExecuteReader();
+
+                if (Reader.HasRows)
+                {
+                    if (Reader.Read())
+                    {
+                        data.PatientID = Convert.ToString(Reader[0]);
+                        data.PatientName = Convert.ToString(Reader[1]);
+                        data.AccessionNum = Convert.ToString(Reader[2]);
+                       
+                    };
+                }
+            }
+
+            return View(data);
+        }
+
+        [HttpPost]
+        public ActionResult Edit(PatientList data)
+        {
+            if (ModelState.IsValid)
+            {
+                using (SqlConnection conn = new SqlConnection(WebConfigurationManager.ConnectionStrings["ReportDB"].ConnectionString))
+                {
+                    conn.Open();
+
+                    string sql = "update patientlist  set PatientID = @PatientID, PatientName = @PatientName where AccessionNum = @AccessionNum";
+
+                    SqlCommand cmd = new SqlCommand(sql, conn);
+
+                    cmd.Parameters.AddWithValue("@PatientID", data.PatientID);
+                    cmd.Parameters.AddWithValue("@PatientName", data.PatientName);
+                    cmd.Parameters.AddWithValue("@AccessionNum", data.AccessionNum);
+
+                    var result = cmd.ExecuteNonQuery();
+
+                    if (result >= 1)
+                    {
+                        TempData["Result"] = "資料更新成功!";
+                    }
+
+                }
+
+                return RedirectToAction("Index");
+            }
+
+            return View(data);
+        }
+
+        public ActionResult Delete(string accession_num)
+        {
+            var data = new PatientList();
+
+            using (SqlConnection conn = new SqlConnection(WebConfigurationManager.ConnectionStrings["ReportDB"].ConnectionString))
+            {
+                conn.Open();
+
+                string sql = "SELECT PatientID, PatientName, AccessionNum, DoctorID, DoctorName " +
+                    "FROM patientlist Where AccessionNum = @AccessionNum";
+
+                SqlCommand cmd = new SqlCommand(sql, conn);
+
+                cmd.Parameters.AddWithValue("@AccessionNum", accession_num);
+
+                SqlDataReader Reader = cmd.ExecuteReader();
+
+                if (Reader.HasRows)
+                {
+                    if (Reader.Read())
+                    {
+                        data.PatientID = Convert.ToString(Reader[0]);
+                        data.PatientName = Convert.ToString(Reader[1]);
+                        data.AccessionNum = Convert.ToString(Reader[2]);
+                    };
+                }
+            }
+
+            return View(data);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Delete(PatientList data)
+        {
+            if (ModelState.IsValid)
+            {
+                using (SqlConnection conn = new SqlConnection(WebConfigurationManager.ConnectionStrings["ReportDB"].ConnectionString))
+                {
+                    conn.Open();
+
+                    string sql = "delete patientlist where AccessionNum = @AccessionNum";
+
+                    SqlCommand cmd = new SqlCommand(sql, conn);
+
+                    cmd.Parameters.AddWithValue("@AccessionNum", data.AccessionNum);
+
+                    var result = cmd.ExecuteNonQuery();
+
+                    if (result >= 1)
+                    {
+                        TempData["Result"] = "資料刪除成功!";
+                    }
+
+                }
+
+                return RedirectToAction("Index");
+            }
+
+            return View(data);
         }
     }
 }
