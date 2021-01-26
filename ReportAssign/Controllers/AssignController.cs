@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+
 using System.Web;
 using System.Web.Configuration;
 using System.Web.Mvc;
@@ -19,50 +20,46 @@ namespace ReportAssign.Controllers
         [HttpPost]
         public ActionResult QueryReport(string accession_num)
         {
-
+           //viewModel
+           //Model Entity
             if (accession_num != null)
             {
 
                 List<PatientList> patlist = new List<PatientList>();
 
+                string sql = "SELECT PatientID, PatientName, AccessionNum, DoctorID, DoctorName " +
+                        "FROM patientlist Where AccessionNum = @AccessionNum";
                 using (SqlConnection conn = new SqlConnection(WebConfigurationManager.ConnectionStrings["ReportDB"].ConnectionString))
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
                     conn.Open();
 
-                    string sql = "SELECT PatientID, PatientName, AccessionNum, DoctorID, DoctorName " +
-                        "FROM patientlist Where AccessionNum = @AccessionNum";
-
-                    SqlCommand cmd = new SqlCommand(sql, conn);
-
                     cmd.Parameters.AddWithValue("@AccessionNum", accession_num);
-
-                    SqlDataReader Reader = cmd.ExecuteReader();
-
-                    if (Reader.HasRows)
+                    //cmd.Parameters.Add(new SqlParameter())
+                    using (SqlDataReader Reader = cmd.ExecuteReader())
                     {
-                        if (Reader.Read())
+
+                        if (Reader.HasRows)
                         {
-
-                            patlist.Add(new PatientList()
+                            while (Reader.Read())
                             {
-                                PatientID = Convert.ToString(Reader[0]),
-                                PatientName = Convert.ToString(Reader[1]),
-                                AccessionNum = Convert.ToString(Reader[2]),
-                                DoctorID = Convert.ToString(Reader[3]),
-                                DoctorName = Convert.ToString(Reader[4])
-                            });
-
-                            if (patlist.Count >= 1)
-                            {
-                                ViewBag.CheckData = "ok";
+                                patlist.Add(new PatientList()
+                                {
+                                    PatientID = Convert.ToString(Reader[0]),
+                                    PatientName = Convert.ToString(Reader[1]),
+                                    AccessionNum = Convert.ToString(Reader[2]),
+                                    DoctorID = Convert.ToString(Reader[3]),
+                                    DoctorName = Convert.ToString(Reader[4])
+                                });
                             }
-
                         }
                     }
 
-
                 }
-
+                if (patlist.Count >= 1)
+                {
+                    ViewBag.checkdata = "ok";
+                }
 
                 ViewBag.Test = new SelectList(patlist, "AccessionNum", "PatientName");
 
@@ -154,6 +151,8 @@ namespace ReportAssign.Controllers
                 {
                     conn.Open();
 
+                    
+                    //"update patientlist  set PatientID = @PatientID, PatientName = @PatientName where AccessionNum = "+ AccessionNum + "
                     string sql = "update patientlist  set PatientID = @PatientID, PatientName = @PatientName where AccessionNum = @AccessionNum";
 
                     SqlCommand cmd = new SqlCommand(sql, conn);

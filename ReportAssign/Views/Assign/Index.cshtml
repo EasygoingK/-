@@ -1,5 +1,6 @@
 ﻿@model IEnumerable<ReportAssign.Models.PatientList>
 
+
 @{
     ViewBag.Title = "Index";
     Layout = "";
@@ -54,13 +55,14 @@
                     @Html.DisplayFor(modelItem => item.DoctorName)
                 </td>
                 <td>
-                    @Html.ActionLink("編輯", "Edit", new { accession_num = item.AccessionNum })
+                    @Html.ActionLink("編輯", "Edit", new { accession_num = item.AccessionNum, DoctorName = item.DoctorName })
                     @Html.ActionLink("刪除", "Delete", new { accession_num = item.AccessionNum })
                 </td>
             </tr>
         }
 
         <tr>
+            @*@Html.DropDownListFor()*@
             @Html.DropDownList("patlist", ViewBag.Test as IEnumerable<SelectListItem>,
                  "--Select--")
             @*  https://stackoverflow.com/questions/50497974/can-not-retrieve-dropdownlist-value-in-model-using-mvc-ado-net*@
