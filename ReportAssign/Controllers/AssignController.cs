@@ -1,6 +1,7 @@
 ﻿using ReportAssign.Models;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 
@@ -17,45 +18,38 @@ namespace ReportAssign.Controllers
             return View();
         }
 
+        //查詢資料
         [HttpPost]
         public ActionResult QueryReport(string accession_num)
         {
-           //viewModel
-           //Model Entity
+
             if (accession_num != null)
             {
+                string sql = "SELECT PatientID, PatientName, AccessionNum, DoctorID, DoctorName " +
+                        "FROM patientlist Where AccessionNum = @AccessionNum";
+
+                var pms = new SqlParameter("@AccessionNum",SqlDbType.VarChar,50);
+                pms.Value = accession_num;
+
+                var queryResult = SqlHelper.ExcuteReader(CommandType.Text, sql, pms);
 
                 List<PatientList> patlist = new List<PatientList>();
 
-                string sql = "SELECT PatientID, PatientName, AccessionNum, DoctorID, DoctorName " +
-                        "FROM patientlist Where AccessionNum = @AccessionNum";
-                using (SqlConnection conn = new SqlConnection(WebConfigurationManager.ConnectionStrings["ReportDB"].ConnectionString))
-                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                if (queryResult.HasRows)
                 {
-                    conn.Open();
-
-                    cmd.Parameters.AddWithValue("@AccessionNum", accession_num);
-                    //cmd.Parameters.Add(new SqlParameter())
-                    using (SqlDataReader Reader = cmd.ExecuteReader())
+                    while (queryResult.Read())
                     {
-
-                        if (Reader.HasRows)
+                        patlist.Add(new PatientList()
                         {
-                            while (Reader.Read())
-                            {
-                                patlist.Add(new PatientList()
-                                {
-                                    PatientID = Convert.ToString(Reader[0]),
-                                    PatientName = Convert.ToString(Reader[1]),
-                                    AccessionNum = Convert.ToString(Reader[2]),
-                                    DoctorID = Convert.ToString(Reader[3]),
-                                    DoctorName = Convert.ToString(Reader[4])
-                                });
-                            }
-                        }
+                            PatientID = Convert.ToString(queryResult["PatientID"]),
+                            PatientName = Convert.ToString(queryResult["PatientName"]),
+                            AccessionNum = Convert.ToString(queryResult["AccessionNum"]),
+                            DoctorID = Convert.ToString(queryResult["DoctorID"]),
+                            DoctorName = Convert.ToString(queryResult["DoctorName"])
+                        });
                     }
-
                 }
+
                 if (patlist.Count >= 1)
                 {
                     ViewBag.checkdata = "ok";
@@ -73,6 +67,7 @@ namespace ReportAssign.Controllers
 
         }
 
+        //新增資料
         public ActionResult Create()
         {
             return View();
@@ -83,25 +78,21 @@ namespace ReportAssign.Controllers
         {
             if (ModelState.IsValid)
             {
-                using (SqlConnection conn = new SqlConnection(WebConfigurationManager.ConnectionStrings["ReportDB"].ConnectionString))
+                string sql = "Insert into patientlist (PatientID, PatientName, AccessionNum) Values (@PatientID, @PatientName, @AccessionNum)";
+
+                var pms = new SqlParameter[]
                 {
-                    conn.Open();
+                    new SqlParameter("@PatientID", SqlDbType.VarChar, 50) { Value = data.PatientID },
+                    new SqlParameter("@PatientName", SqlDbType.VarChar, 50) { Value = data.PatientID },
+                    new SqlParameter("@AccessionNum", SqlDbType.VarChar, 50) { Value = data.PatientID }
+                };
 
-                    string sql = "Insert into patientlist (PatientID, PatientName, AccessionNum) Values (@PatientID, @PatientName, @AccessionNum)";
 
-                    SqlCommand cmd = new SqlCommand(sql, conn);
+                var result = SqlHelper.ExecuteNonQuery(CommandType.Text, sql, pms);
 
-                    cmd.Parameters.AddWithValue("@PatientID", data.PatientID);
-                    cmd.Parameters.AddWithValue("@PatientName", data.PatientName);
-                    cmd.Parameters.AddWithValue("@AccessionNum", data.AccessionNum);
-
-                    var result = cmd.ExecuteNonQuery();
-
-                    if (result >= 1)
-                    {
-                        TempData["Result"] = "資料新增成功!";
-                    }
-
+                if (result >= 1)
+                {
+                    TempData["Result"] = "資料新增成功!";
                 }
 
                 return RedirectToAction("Index");
@@ -110,32 +101,25 @@ namespace ReportAssign.Controllers
             return View(data);
         }
 
+        //編輯資料
         public ActionResult Edit(string accession_num)
         {
             var data = new PatientList();
 
-            using (SqlConnection conn = new SqlConnection(WebConfigurationManager.ConnectionStrings["ReportDB"].ConnectionString))
+            var sql = "SELECT PatientID, PatientName, AccessionNum, DoctorID, DoctorName " +
+                   "FROM patientlist Where AccessionNum = @AccessionNum";
+
+            var pms = new SqlParameter("@AccessionNum", SqlDbType.VarChar, 50) { Value = accession_num};
+            
+            var result = SqlHelper.ExcuteReader(CommandType.Text, sql, pms);
+
+            if (result.HasRows)
             {
-                conn.Open();
-
-                string sql = "SELECT PatientID, PatientName, AccessionNum, DoctorID, DoctorName " +
-                    "FROM patientlist Where AccessionNum = @AccessionNum";
-
-                SqlCommand cmd = new SqlCommand(sql, conn);
-
-                cmd.Parameters.AddWithValue("@AccessionNum", accession_num);
-
-                SqlDataReader Reader = cmd.ExecuteReader();
-
-                if (Reader.HasRows)
+                while (result.Read())
                 {
-                    if (Reader.Read())
-                    {
-                        data.PatientID = Convert.ToString(Reader[0]);
-                        data.PatientName = Convert.ToString(Reader[1]);
-                        data.AccessionNum = Convert.ToString(Reader[2]);
-                       
-                    };
+                    data.PatientID = Convert.ToString(result["PatientID"]);
+                    data.PatientName = Convert.ToString(result["PatientName"]);
+                    data.AccessionNum = Convert.ToString(result["AccessionNum"]);
                 }
             }
 
@@ -147,27 +131,20 @@ namespace ReportAssign.Controllers
         {
             if (ModelState.IsValid)
             {
-                using (SqlConnection conn = new SqlConnection(WebConfigurationManager.ConnectionStrings["ReportDB"].ConnectionString))
+                string sql = "update patientlist  set PatientID = @PatientID, PatientName = @PatientName where AccessionNum = @AccessionNum";
+
+                var pms = new SqlParameter[]
                 {
-                    conn.Open();
+                    new SqlParameter("@PatientID",SqlDbType.VarChar,50){Value=data.PatientID },
+                    new SqlParameter("@PatientName",SqlDbType.VarChar,50){Value=data.PatientID },
+                    new SqlParameter("@AccessionNum",SqlDbType.VarChar,50){Value=data.AccessionNum }
+                };
 
-                    
-                    //"update patientlist  set PatientID = @PatientID, PatientName = @PatientName where AccessionNum = "+ AccessionNum + "
-                    string sql = "update patientlist  set PatientID = @PatientID, PatientName = @PatientName where AccessionNum = @AccessionNum";
+                var result = SqlHelper.ExecuteNonQuery(CommandType.Text, sql, pms);
 
-                    SqlCommand cmd = new SqlCommand(sql, conn);
-
-                    cmd.Parameters.AddWithValue("@PatientID", data.PatientID);
-                    cmd.Parameters.AddWithValue("@PatientName", data.PatientName);
-                    cmd.Parameters.AddWithValue("@AccessionNum", data.AccessionNum);
-
-                    var result = cmd.ExecuteNonQuery();
-
-                    if (result >= 1)
-                    {
-                        TempData["Result"] = "資料更新成功!";
-                    }
-
+                if (result >= 1)
+                {
+                    TempData["Result"] = "資料更新成功!";
                 }
 
                 return RedirectToAction("Index");
@@ -176,32 +153,26 @@ namespace ReportAssign.Controllers
             return View(data);
         }
 
+        //刪除資料
         public ActionResult Delete(string accession_num)
         {
             var data = new PatientList();
 
-            using (SqlConnection conn = new SqlConnection(WebConfigurationManager.ConnectionStrings["ReportDB"].ConnectionString))
+            var sql = "SELECT PatientID, PatientName, AccessionNum, DoctorID, DoctorName " +
+                "FROM patientlist Where AccessionNum = @AccessionNum";
+
+            var pms = new SqlParameter("@AccessionNum", SqlDbType.VarChar, 50) { Value = accession_num };
+
+            var result = SqlHelper.ExcuteReader(CommandType.Text, sql, pms);
+
+            if (result.HasRows)
             {
-                conn.Open();
-
-                string sql = "SELECT PatientID, PatientName, AccessionNum, DoctorID, DoctorName " +
-                    "FROM patientlist Where AccessionNum = @AccessionNum";
-
-                SqlCommand cmd = new SqlCommand(sql, conn);
-
-                cmd.Parameters.AddWithValue("@AccessionNum", accession_num);
-
-                SqlDataReader Reader = cmd.ExecuteReader();
-
-                if (Reader.HasRows)
+                if (result.Read())
                 {
-                    if (Reader.Read())
-                    {
-                        data.PatientID = Convert.ToString(Reader[0]);
-                        data.PatientName = Convert.ToString(Reader[1]);
-                        data.AccessionNum = Convert.ToString(Reader[2]);
-                    };
-                }
+                    data.PatientID = Convert.ToString(result["PatientID"]);
+                    data.PatientName = Convert.ToString(result["PatientName"]);
+                    data.AccessionNum = Convert.ToString(result["AccessionNum"]);
+                };
             }
 
             return View(data);
@@ -213,23 +184,15 @@ namespace ReportAssign.Controllers
         {
             if (ModelState.IsValid)
             {
-                using (SqlConnection conn = new SqlConnection(WebConfigurationManager.ConnectionStrings["ReportDB"].ConnectionString))
+                string sql = "delete patientlist where AccessionNum = @AccessionNum";
+
+                var pms = new SqlParameter("@AccessionNum", SqlDbType.VarChar, 50) { Value = data.AccessionNum };
+
+                var result = SqlHelper.ExecuteNonQuery(CommandType.Text, sql, pms);
+
+                if (result >= 1)
                 {
-                    conn.Open();
-
-                    string sql = "delete patientlist where AccessionNum = @AccessionNum";
-
-                    SqlCommand cmd = new SqlCommand(sql, conn);
-
-                    cmd.Parameters.AddWithValue("@AccessionNum", data.AccessionNum);
-
-                    var result = cmd.ExecuteNonQuery();
-
-                    if (result >= 1)
-                    {
-                        TempData["Result"] = "資料刪除成功!";
-                    }
-
+                    TempData["Result"] = "資料刪除成功!";
                 }
 
                 return RedirectToAction("Index");
