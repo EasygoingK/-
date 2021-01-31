@@ -9,14 +9,13 @@ using System.Web.Configuration;
 
 namespace ReportAssign
 {
-    public static class SqlHelper
+    public class SqlHelper
     {
         private static readonly string constr = ConfigurationManager.ConnectionStrings["ReportDB"].ConnectionString;
 
         public static SqlDataReader ExcuteReader(CommandType sqltype, string sql, params SqlParameter[] pms)
         {
             SqlConnection conn = new SqlConnection(constr);
-        
             using (SqlCommand cmd = new SqlCommand(sql, conn))
             {
                 conn.Open();
@@ -26,14 +25,11 @@ namespace ReportAssign
 
                 return cmd.ExecuteReader();
             }
-         
-           
         }
 
         public static int ExecuteNonQuery(CommandType sqltype, string sql, params SqlParameter[] pms)
         {
-            SqlConnection conn = new SqlConnection(constr);
-           
+            using (SqlConnection conn = new SqlConnection(constr))
             using (SqlCommand cmd = new SqlCommand(sql, conn))
             {
                 conn.Open();
@@ -43,7 +39,6 @@ namespace ReportAssign
 
                 return cmd.ExecuteNonQuery();
             }
-            
         }
     }
 }
