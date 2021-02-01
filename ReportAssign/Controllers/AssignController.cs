@@ -201,5 +201,59 @@ namespace ReportAssign.Controllers
 
             return View(data);
         }
+
+        [HttpPost]
+        public ActionResult GetDocList()
+        {
+            var sql = "select DocID,DocName from doclist";
+
+            var result = SqlHelper.ExcuteReader(CommandType.Text, sql);
+
+            List<DocoterList> docList = new List<DocoterList>();
+
+            if (result.HasRows)
+            {
+                while (result.Read())
+                {
+                    {
+                        docList.Add(new DocoterList()
+                        {
+                            DocID = Convert.ToString(result["DocID"]),
+                            DocName = Convert.ToString(result["DocName"])
+                        });
+                    };
+                }
+            }
+                   
+            return Json(docList);
+        }
+
+        [HttpPost]
+        public ActionResult UpdateDoc(string doclist, PatientList item)
+        {
+            if (ModelState.IsValid)
+            {
+                var dicId = doclist.Split('-');
+
+                var sql = "  update patientlist set DoctorID = @DoctorID, DoctorName = @DoctorName where AccessionNum = @AccessionNum";
+
+                var pmsList = new List<SqlParameter>();
+                pmsList.Add(new SqlParameter("@DoctorID", SqlDbType.VarChar, 50) { Value = dicId[0] });
+                pmsList.Add(new SqlParameter("@DoctorName", SqlDbType.VarChar, 50) { Value = dicId[1] });
+                pmsList.Add(new SqlParameter("@AccessionNum", SqlDbType.VarChar, 50) { Value = item.AccessionNum });
+                var pms = pmsList.ToArray();
+
+                var result = SqlHelper.ExecuteNonQuery(CommandType.Text, sql, pms);
+
+                if (result >= 1)
+                {
+                    TempData["Result"] = "資料更新成功!";
+                }
+
+                return RedirectToAction("Index");
+            }
+
+            return View(item);
+        }
     }
 }

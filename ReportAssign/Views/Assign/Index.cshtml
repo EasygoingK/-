@@ -16,28 +16,31 @@
 @using (Html.BeginForm("QueryReport", "Assign", FormMethod.Post))
 {
     <p>
-        檢查流水號 :<input type="text" name="accession_num" value="" />
+        檢查流水號 :<input type="text" name="accession_num" value="" style="width"/>
         <input type="submit" name="name" value="查詢" />
     </p>
 }
 
-<table>
-    @if (ViewBag.CheckData == "ok")
-    {
+<style>
+    .DropDownList_doclist{
+        width:120px;
+    }
+</style>
+
+@if (ViewBag.CheckData == "ok")
+{
+    <table width="">
         <tr>
             <td>病歷號</td>
             <td>姓名</td>
             <td>檢查流水號</td>
             <td>醫師帳號</td>
             <td>醫師姓名</td>
+            <td>報告改分派</td>
         </tr>
 
-
-
-
-        foreach (var item in Model)
+        @foreach (var item in Model)
         {
-
             <tr>
                 <td>
                     @Html.DisplayFor(modelItem => item.PatientID)
@@ -55,18 +58,36 @@
                     @Html.DisplayFor(modelItem => item.DoctorName)
                 </td>
                 <td>
-                    @Html.ActionLink("編輯", "Edit", new { accession_num = item.AccessionNum, DoctorName = item.DoctorName })
-                    @Html.ActionLink("刪除", "Delete", new { accession_num = item.AccessionNum })
+                    @*@Html.ActionLink("編輯", "Edit", new { accession_num = item.AccessionNum, DoctorName = item.DoctorName })
+                    @Html.ActionLink("刪除", "Delete", new { accession_num = item.AccessionNum })*@
+
+                    @using (Html.BeginForm("UpdateDoc", "Assign", FormMethod.Post))
+                    {
+                        @Html.HiddenFor(modelItem => item.AccessionNum)
+                        <input list="doclist" name="doclist" res class="DropDownList_doclist">
+                        <input type="submit" value="分派" />
+                    }
                 </td>
             </tr>
         }
+    </table>
 
-        <tr>
-            @*@Html.DropDownListFor()*@
-            @Html.DropDownList("patlist", ViewBag.Test as IEnumerable<SelectListItem>,
-                 "--Select--")
-            @*  https://stackoverflow.com/questions/50497974/can-not-retrieve-dropdownlist-value-in-model-using-mvc-ado-net*@
-        </tr>
-    }
+ 
 
-</table>
+    <datalist id="doclist"></datalist>
+
+    <script src="/Scripts/jquery-3.3.1.js"></script>
+    <script src="/Scripts/bootstrap.js"></script>
+    <script>
+
+        $(function () {
+
+            $.post('/Assign/GetDocList', function (res) {
+                for (var i = 0; i < res.length; i++) {
+                    $('#doclist').append($("<option>").attr('value', res[i].DocID + "-" + res[i].DocName));
+                }
+            });
+        });
+    </script>
+}
+
