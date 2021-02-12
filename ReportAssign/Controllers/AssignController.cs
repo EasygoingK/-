@@ -80,16 +80,14 @@ namespace ReportAssign.Controllers
             {
                 string sql = "Insert into patientlist (PatientID, PatientName, AccessionNum) Values (@PatientID, @PatientName, @AccessionNum)";
 
-                List<SqlParameter> pmsList = new List<SqlParameter>() {
-                    new SqlParameter("@PatientID", SqlDbType.VarChar, 50) { Value = data.PatientID },
-                    new SqlParameter("@PatientName", SqlDbType.VarChar, 50) { Value = data.PatientID },
-                    new SqlParameter("@AccessionNum", SqlDbType.VarChar, 50) { Value = data.PatientID }
-                };
-                pmsList.Add(new SqlParameter());
+                List<SqlParameter> pmsList = new List<SqlParameter>(); 
+                pmsList.Add(new SqlParameter ( "@PatientID", SqlDbType.VarChar, 50) { Value = data.PatientID  });
+                pmsList.Add(new SqlParameter ("@PatientName", SqlDbType.VarChar, 50) { Value = data.PatientName });
+                pmsList.Add(new SqlParameter ("@AccessionNum", SqlDbType.VarChar, 50) { Value = data.AccessionNum });
 
                 var pms = pmsList.ToArray();
 
-                 var result = SqlHelper.ExecuteNonQuery(CommandType.Text, sql, pms);
+                var result = SqlHelper.ExecuteNonQuery(CommandType.Text, sql, pms);
 
                 if (result >= 1)
                 {
