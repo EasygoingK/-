@@ -58,8 +58,8 @@
                     @Html.DisplayFor(modelItem => item.DoctorName)
                 </td>
                 <td>
-                    @*@Html.ActionLink("編輯", "Edit", new { accession_num = item.AccessionNum, DoctorName = item.DoctorName })
-                    @Html.ActionLink("刪除", "Delete", new { accession_num = item.AccessionNum })*@
+                    @Html.ActionLink("編輯", "Edit", new { accession_num = item.AccessionNum, DoctorName = item.DoctorName })
+                    @Html.ActionLink("刪除", "Delete", new { accession_num = item.AccessionNum })
 
                     @using (Html.BeginForm("UpdateDoc", "Assign", FormMethod.Post))
                     {
