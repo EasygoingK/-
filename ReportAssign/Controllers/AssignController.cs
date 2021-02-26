@@ -26,22 +26,28 @@ namespace ReportAssign.Controllers
         [HttpPost]
         public ActionResult QueryReport(string accession_num)
         {
-            List<PatientList> patList = new List<PatientList>();
+            List<RIS_WORKLIST> patList = new List<RIS_WORKLIST>();
 
             if (accession_num != null)
             {
                 using (IDbConnection db = new SqlConnection(constr))
                 {
-                    string sql = "SELECT PatientID, PatientName, AccessionNum, DoctorID, DoctorName FROM patientlist Where AccessionNum = @AccessionNum";
+                    string sql = "select r.patient_id, r.patient_name, r.accession_num, r.assign_physician, u.user_realname " +
+                                 "from ris_worklist r, systemuser u " +
+                                 "where r.assign_physician = u.user_name and accession_num = @ACCESSION_NUM";
 
-                    patList = db.Query<PatientList>(sql, new { AccessionNum = accession_num }).ToList();
+                    patList = db.Query<RIS_WORKLIST>(sql, new { ACCESSION_NUM = accession_num }).ToList();
 
-                    if (patList.Count >= 1)
+                    if (patList.Count == 1)
                     {
                         ViewBag.checkdata = "ok";
                     }
+                    else
+                    {
+                        TempData["Result"] = "查無此報告，請重新輸入檢查流水號!";
+                    }
 
-                    ViewBag.Test = new SelectList(patList, "AccessionNum", "PatientName");
+                    ViewBag.Test = new SelectList(patList, "ACCESSION_NUM", "PATIENT_NAME");
 
                     return View("Index", patList);
                 }
@@ -53,166 +59,68 @@ namespace ReportAssign.Controllers
 
         }
 
-        //新增資料
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        public ActionResult Create(PatientList data)
-        {
-            if (ModelState.IsValid)
-            {
-                using (IDbConnection db = new SqlConnection(constr))
-                {
-                    string sql = "Insert into patientlist (PatientID, PatientName, AccessionNum) Values (@PatientID, @PatientName, @AccessionNum)";
-
-                    var result = db.Execute(sql, new { data.PatientID, data.PatientName, data.AccessionNum });
-
-                    if (result >= 1)
-                    {
-                        TempData["Result"] = "資料新增成功!";
-                    }
-                }
-                return RedirectToAction("Index");
-            }
-
-            return View(data);
-        }
-
-        //編輯資料
-        public ActionResult Edit(string accession_num)
-        {
-            var data = new PatientList();
-
-            using (IDbConnection db = new SqlConnection(constr))
-            {
-                var sql = "SELECT PatientID, PatientName, AccessionNum, DoctorID, DoctorName " +
-                                   "FROM patientlist Where AccessionNum = @AccessionNum";
-
-                data = db.Query<PatientList>(sql, new { AccessionNum = accession_num }).ToList().FirstOrDefault();
-            }
-
-            return View(data);
-        }
-
-        [HttpPost]
-        public ActionResult Edit(PatientList data)
-        {
-            if (ModelState.IsValid)
-            {
-                using (IDbConnection db = new SqlConnection(constr))
-                {
-                    string sql = "update patientlist  set PatientID = @PatientID, PatientName = @PatientName where AccessionNum = @AccessionNum";
-
-                    var result = db.Execute(sql, new { data.PatientID, data.PatientName, data.AccessionNum });
-
-                    if (result >= 1)
-                    {
-                        TempData["Result"] = "資料更新成功!";
-                    }
-                }
-
-                return RedirectToAction("Index");
-            }
-
-            return View(data);
-        }
-
-        //刪除資料
-        public ActionResult Delete(string accession_num)
-        {
-            var data = new PatientList();
-
-            using (IDbConnection db = new SqlConnection(constr))
-            {
-                string sql = "SELECT PatientID, PatientName, AccessionNum, DoctorID, DoctorName " +
-                "FROM patientlist Where AccessionNum = @AccessionNum";
-
-                data = db.Query<PatientList>(sql, new { AccessionNum = accession_num }).ToList().FirstOrDefault();
-            }
-
-            return View(data);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(PatientList data)
-        {
-            if (ModelState.IsValid)
-            {
-                using (IDbConnection db = new SqlConnection(constr))
-                {
-                    string sql = "delete patientlist where AccessionNum = @AccessionNum";
-
-                    var result = db.Execute(sql, new { data.AccessionNum });
-
-                    if (result >= 1)
-                    {
-                        TempData["Result"] = "資料刪除成功!";
-                    }
-                }
-
-                return RedirectToAction("Index");
-            }
-
-            return View(data);
-        }
-
         //下拉選單取得醫師資料
         [HttpPost]
         public ActionResult GetDocList()
         {
-            var sql = "select DocID,DocName from doclist";
+            List<SYSTEMUSER> docList = new List<SYSTEMUSER>();
 
-            var result = SqlHelper.ExcuteReader(CommandType.Text, sql);
-
-            List<DocoterList> docList = new List<DocoterList>();
-
-            if (result.HasRows)
+            using (IDbConnection db = new SqlConnection(constr))
             {
-                while (result.Read())
-                {
-                    {
-                        docList.Add(new DocoterList()
-                        {
-                            DocID = Convert.ToString(result["DocID"]),
-                            DocName = Convert.ToString(result["DocName"])
-                        });
-                    };
-                }
+                string sql = "select user_name, user_realname from systemuser";
+
+                docList = db.Query<SYSTEMUSER>(sql).ToList();
             }
                    
             return Json(docList);
         }
 
+        //更新醫師資料
         [HttpPost]
-        public ActionResult UpdateDoc(string doclist, PatientList item)
+        public ActionResult UpdateDoc(string doclist, RIS_WORKLIST item)
         {
             if (ModelState.IsValid)
             {
-                var dicId = doclist.Split('-');
-
-                var sql = "  update patientlist set DoctorID = @DoctorID, DoctorName = @DoctorName where AccessionNum = @AccessionNum";
-
-                var pmsList = new List<SqlParameter>();
-                pmsList.Add(new SqlParameter("@DoctorID", SqlDbType.VarChar, 50) { Value = dicId[0] });
-                pmsList.Add(new SqlParameter("@DoctorName", SqlDbType.VarChar, 50) { Value = dicId[1] });
-                pmsList.Add(new SqlParameter("@AccessionNum", SqlDbType.VarChar, 50) { Value = item.AccessionNum });
-                var pms = pmsList.ToArray();
-
-                var result = SqlHelper.ExecuteNonQuery(CommandType.Text, sql, pms);
-
-                if (result >= 1)
+                if (!string.IsNullOrEmpty(doclist))
                 {
-                    TempData["Result"] = "資料更新成功!";
+                    var user_name = doclist.Trim().Split('-');
+
+                    using (IDbConnection db = new SqlConnection(constr))
+                    {
+
+                        string docCheck = "select user_name, user_realname from systemuser where user_name = @user_name";
+
+                        var result = db.Query(docCheck,new { user_name = user_name[0] }).ToList();
+
+                        if (result.Count == 1)
+                        {
+                            var sql = "update ris_worklist set assign_physician = @ASSIGN_PHYSICIAN " +
+                                      "where accession_num = @ACCESSION_NUM";
+
+                            var data = db.Execute(sql, new { assign_physician = user_name[0], accession_num = item.ACCESSION_NUM });
+
+                            if (data == 1)
+                            {
+                                TempData["Result"] = "報告分派成功!";
+                            }
+                        }
+                        else
+                        {
+                            TempData["Result"] = "查無此醫師帳號，請重新輸入!";
+
+                        }
+                    }
+                }
+                else
+                {
+                    TempData["Result"] = "未指定分派醫師，請重新輸入!";
                 }
 
                 return RedirectToAction("Index");
             }
 
             return View(item);
+
         }
     }
 }

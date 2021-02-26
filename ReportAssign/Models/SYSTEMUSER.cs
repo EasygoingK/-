@@ -5,9 +5,9 @@ using System.Web;
 
 namespace ReportAssign.Models
 {
-    public class DocoterList
+    public class SYSTEMUSER
     {
-        public string DocID { get; set; }
-        public string DocName { get; set; }
+        public string USER_NAME { get; set; }
+        public string USER_REALNAME { get; set; }
     }
 }

@@ -1,36 +1,79 @@
-﻿@model IEnumerable<ReportAssign.Models.PatientList>
+﻿@model IEnumerable<ReportAssign.Models.RIS_WORKLIST>
 
 
 @{
     ViewBag.Title = "Index";
-    Layout = "";
 }
 
-@TempData["Result"]
+<style>
+    .DropDownList_doclist {
+        width: 180px;
+        height: 34px;
+        padding: 6px 12px;
+        font-size: 14px;
+        line-height: 1.42857143;
+        color: #555;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .text {
+        width: 200px;
+        height: 34px;
+        padding: 6px 12px;
+        font-size: 20px;
+        line-height: 1.42857143;
+        color: #555;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+        .text:focus {
+            border-color: #66afe9;
+            outline: 0;
+        }
+
+    .word, td {
+        padding-left: 15px;
+        font-size: 20px;
+    }
+
+    .TempData {
+        font-size: 20px;
+        color: blue;
+        padding-top: 20px;
+    }
+
+    .test{
+        color:red;
+         }
+
+    }
+</style>
+
+<p class="TempData">
+    @TempData["Result"]
+</p>
 
 <h1>報告分派系統</h1>
 
-@Html.ActionLink("新增資料", "Create")
+
 
 
 @using (Html.BeginForm("QueryReport", "Assign", FormMethod.Post))
 {
-    <p>
-        檢查流水號 :<input type="text" name="accession_num" value="" style="width"/>
-        <input type="submit" name="name" value="查詢" />
+    <p class="word">
+        檢查流水號 :    <input type="text" name="accession_num" value="" class="text" />
+        <input type="submit" name="name" value="查詢" class="btn btn-primary" />
     </p>
 }
 
-<style>
-    .DropDownList_doclist{
-        width:120px;
-    }
-</style>
+
 
 @if (ViewBag.CheckData == "ok")
 {
-    <table width="">
-        <tr>
+    <table>
+        <tr class="word">
             <td>病歷號</td>
             <td>姓名</td>
             <td>檢查流水號</td>
@@ -41,53 +84,52 @@
 
         @foreach (var item in Model)
         {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.PatientID)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.PatientName)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.AccessionNum)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.DoctorID)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.DoctorName)
-                </td>
-                <td>
-                    @Html.ActionLink("編輯", "Edit", new { accession_num = item.AccessionNum, DoctorName = item.DoctorName })
-                    @Html.ActionLink("刪除", "Delete", new { accession_num = item.AccessionNum })
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.PATIENT_ID)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PATIENT_NAME)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ACCESSION_NUM)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ASSIGN_PHYSICIAN)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.USER_REALNAME)
+            </td>
+            <td>
+                @*@Html.ActionLink("編輯", "Edit", new { accession_num = item.AccessionNum, DoctorName = item.DoctorName })
+            @Html.ActionLink("刪除", "Delete", new { accession_num = item.AccessionNum })*@
 
-                    @using (Html.BeginForm("UpdateDoc", "Assign", FormMethod.Post))
-                    {
-                        @Html.HiddenFor(modelItem => item.AccessionNum)
-                        <input list="doclist" name="doclist" res class="DropDownList_doclist">
-                        <input type="submit" value="分派" />
-                    }
-                </td>
-            </tr>
+                @using (Html.BeginForm("UpdateDoc", "Assign", FormMethod.Post))
+                {
+                    @Html.HiddenFor(modelItem => item.ACCESSION_NUM)
+                    <input list="doclist" name="doclist" res class="DropDownList_doclist">
+                    <input type="submit" value="分派" class="btn btn-secondary" />
+                }
+            </td>
+        </tr>
         }
     </table>
 
- 
+    <datalist id="doclist" class="test"></datalist>
 
-    <datalist id="doclist"></datalist>
-
-    <script src="/Scripts/jquery-3.3.1.js"></script>
-    <script src="/Scripts/bootstrap.js"></script>
+    <script src="~/Scripts/jquery-3.3.1.js"></script>
+    <script src="~/Scripts/bootstrap.js"></script>
     <script>
 
         $(function () {
-
-            $.post('/Assign/GetDocList', function (res) {
+        
+            $.post('@Url.Action("GetDocList", "Assign")', function (res) {
+                
                 for (var i = 0; i < res.length; i++) {
-                    $('#doclist').append($("<option>").attr('value', res[i].DocID + "-" + res[i].DocName));
+                    $('#doclist').append($("<option>").attr('value', res[i].USER_NAME + "-" + res[i].USER_REALNAME));
                 }
             });
         });
+
     </script>
 }
-
